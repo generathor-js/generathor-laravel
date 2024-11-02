@@ -1,0 +1,14 @@
+#node
+node_modules
+
+#IDE
+.idea
+
+#Compiled files
+dist
+
+#Dummy
+test.js
+
+.DS_Store
+

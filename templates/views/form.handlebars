@@ -1,0 +1,103 @@
+<form x-data="{
+    form: $form('{{method}}', '{{#if route}}\{{route('{{route}}'{{#if routeRecord}}, ['{{routeRecord}}' => ${{routeRecord}}->getRouteKey()]{{/if}})}}{{/if}}', {{concat '' '{'}}{{#each inputs}}
+        {{name}}: {{#if (eq type "checkbox")}}\{{ {{../getOld}}('{{name}}'{{#if ../record}}, ${{../record}}->{{name}}{{/if}}) == '1' ? 'true' : 'false' }}{{else}}'\{{ {{../getOld}}('{{name}}'{{#if ../record}}, ${{../record}}->{{name}}{{/if}}) }}'{{/if}},{{/each}}
+    }).setErrors(\{{ Js::from($errors->{{errorBag}}->messages()) }}),
+}">
+{{#if (not (eq method "get"))}}    @csrf
+{{/if}}{{#if (eq method "put")}}    @method('PUT')
+{{/if}}{{#each hiddenInputs}}{{#if (eq type "current_url")}}    <input type="hidden" name="{{name}}" value="\{{ request()->fullUrl() }}" />
+{{else if (eq type "query")}}    <input type="hidden" name="{{name}}" value="\{{ request()->query('{{name}}') }}" />
+{{else if (eq type "fixed")}}    <input type="hidden" name="{{name}}" value="\{{ {{{data.value}}} }}" />
+{{/if}}{{/each}}    <div class="grid grid-cols-1 gap-4 sm:grid-cols-{{columns}}">{{#each inputs}}
+        <div>
+            {{#if (eq type "number")}}<label for="{{../prefix}}{{name}}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            <input
+                type="text"
+                name="{{name}}"
+                id="{{../prefix}}{{name}}"
+                x-model="form.{{name}}"
+                x-mask:dynamic="$money($input, '.', '', {{data.decimals}})"
+                @change="form.validate('{{name}}')"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />{{else if (eq type "checkbox")}}<div class="flex items-center h-full">
+                <input
+                    id="{{../prefix}}{{name}}"
+                    name="{{name}}"
+                    type="checkbox"
+                    x-model="form.{{name}}"
+                    @change="form.validate('{{name}}')"
+                    value="1"
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label for="{{../prefix}}{{name}}" class="ml-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            </div>{{else if (eq type "select")}}<label for="{{../prefix}}{{name}}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            <select
+                id="{{../prefix}}{{name}}"
+                name="{{name}}"
+                x-model="form.{{name}}"
+                @change="form.validate('{{name}}')"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            >{{#each data.options}}
+                <option value="{{value}}">\{{ __('{{label}}') }}</option>{{/each}}
+            </select>{{else if (eq type "record")}}<label for="{{../prefix}}{{name}}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            <x-generathor.record-input
+                name="{{name}}"
+                id="{{../prefix}}{{name}}"
+                x-model="form.{{name}}"
+                term="\{{ {{../getOld}}('{{name}}_term', {{#if ../record}}${{../record}}->{{data.relationName}} ? ${{../record}}->{{data.relationName}}->getRecordLabel() : ''{{else}}''{{/if}}) }}"
+                @change="form.validate('{{name}}')"
+                url="\{{url()->route('generathor.{{data.context}}.search')}}"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />{{else if (eq type "datetime")}}<label for="{{../prefix}}{{name}}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            <input
+                name="{{name}}"
+                id="{{../prefix}}{{name}}"
+                x-model="form.{{name}}"
+                @change="form.validate('{{name}}')"
+                class="input-datetime bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />{{else if (eq type "date")}}<label for="{{../prefix}}{{name}}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            <input
+                name="{{name}}"
+                id="{{../prefix}}{{name}}"
+                x-model="form.{{name}}"
+                @change="form.validate('{{name}}')"
+                class="input-date bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />{{else if (eq type "time")}}<label for="{{../prefix}}{{name}}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            <input
+                name="{{name}}"
+                id="{{../prefix}}{{name}}"
+                x-model="form.{{name}}"
+                @change="form.validate('{{name}}')"
+                class="input-time bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />{{else}}<label for="{{../prefix}}{{name}}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">\{{ __('{{label}}') }}</label>
+            <input
+                type="text"
+                name="{{name}}"
+                id="{{../prefix}}{{name}}"
+                x-model="form.{{name}}"
+                @change="form.validate('{{name}}')"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />{{/if}}
+            <template x-if="form.invalid('{{name}}')">
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500" x-text="form.errors.{{name}}"></p>
+            </template>
+        </div>{{/each}}
+        <div class="col-span-1 col-start-1 w-full sm:col-span-{{columns}}{{#if cancelLink}} space-y-2{{/if}}">
+            <button
+                class="w-full focus:outline-none text-white bg-{{buttonColor}}-700 hover:bg-{{buttonColor}}-800 focus:ring-4 focus:ring-{{buttonColor}}-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-{{buttonColor}}-600 dark:hover:bg-{{buttonColor}}-700 dark:focus:ring-{{buttonColor}}-800"
+                :class="{
+                    'cursor-not-allowed': form.hasErrors
+                }"
+                x-bind:disabled="form.hasErrors"
+            >
+                \{{ __('{{buttonLabel}}') }}
+            </button>{{#if cancelLink}}
+            <a href="\{{ {{{ cancelLink.route }}} }}" class="flex items-center justify-center space-x-1 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
+{{#if cancelLink.icon}}
+                {{{ cancelLink.icon }}}
+{{/if}}
+                <span>\{{ __('{{ cancelLink.label }}') }}</span>
+            </a>{{/if}}
+        </div>
+    </div>
+</form>

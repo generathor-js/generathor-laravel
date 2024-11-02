@@ -1,0 +1,41 @@
+<x-{{layout}}>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            \{{__('{{header}}')}}
+        </h2>
+    </x-slot>
+    <div class="w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto overflow-hidden py-2">
+            <x-generathor.breadcrumbs :breadcrumbs="[
+                [
+                    'label' => __('Home'),
+                    'icon' => 'generathor.icon-home',
+                    'url' => route('{{homeRoute}}')
+                ],
+                [
+                    'label' => __('Manage'),
+                    'icon' => 'generathor.icon-computer',
+                    'url' => route('generathor.menu')
+                ],
+                [
+                    'label' => __('{{listLabel}}'),
+                    'url' => route('generathor.{{context}}.index')
+                ],
+                [
+                    'label' => ${{recordName}}->getRecordLabel(),
+                    'url' => route('generathor.{{context}}.show', ['{{recordName}}' => ${{recordName}}->getRouteKey()])
+                ],
+                [
+                    'label' => __('Update')
+                ]
+            ]" />
+        </div>
+    </div>
+    <div class="max-w-7xl py-12 mx-auto sm:px-6 lg:px-8">
+        <div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-lg">
+            <div class="p-6 lg:p-8 bg-white dark:bg-gray-800 dark:bg-gradient-to-bl dark:from-gray-700/50 dark:via-transparent border-b border-gray-200 dark:border-gray-700">
+                <x-generathor.{{context}}.update-form :{{recordName}}="${{recordName}}" />
+            </div>
+        </div>
+    </div>
+</x-{{layout}}>

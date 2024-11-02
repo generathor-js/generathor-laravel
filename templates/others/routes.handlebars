@@ -1,0 +1,16 @@
+<?php
+
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+use Illuminate\Support\Facades\Route;
+
+Route::view('/', 'generathor.menu')->name('generathor.menu');
+{{#each this}}
+/**
+ * {{label}} routes.
+ */
+Route::controller({{controller}}::class)->group(function () {
+{{#each routes}}
+    Route::{{method}}('{{path}}', '{{action}}')->name('generathor.{{context}}.{{action}}'){{#if precognition}}->middleware([HandlePrecognitiveRequests::class]){{/if}};
+{{/each}}
+});
+{{/each}}

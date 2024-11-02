@@ -1,0 +1,21 @@
+<nav class="flex px-4 sm:px-6 lg:px-8" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1">
+        @foreach($breadcrumbs as $breadcrumb)
+        <li class="inline-flex items-center">
+            @if (!$loop->first)
+            <x-generathor.icon-chevron-right />
+            @endif
+            @if (@$loop->last)
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-400">\{{$breadcrumb['label']}}</span>
+            @else
+            <a href="\{{$breadcrumb['url']}}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white space-x-2">
+                @if (!empty($breadcrumb['icon']))
+                <x-dynamic-component :component="$breadcrumb['icon']" />
+                @endif
+                <span>\{{$breadcrumb['label']}}</span>
+            </a>
+            @endif
+        </li>
+        @endforeach
+    </ol>
+</nav>
