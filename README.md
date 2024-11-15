@@ -164,9 +164,10 @@ Also, you need to install the following packages:
 * @alpinejs/collapse
 * laravel-precognition-alpine
 * sweetalert2
+* @fortawesome/fontawesome-free
 
 ```bash
-npm i -D alpinejs @alpinejs/collapse laravel-precognition-alpine sweetalert2
+npm i -D alpinejs @alpinejs/collapse laravel-precognition-alpine sweetalert2 @fortawesome/fontawesome-free
 ```
 
 File `app.js` must contain:
