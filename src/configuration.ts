@@ -1,4 +1,4 @@
-export type ConfigurationType = {
+export type ConfigurationAttributes = {
   createChildModel?: boolean;
   createEloquentModelsOnly?: boolean;
   reference?: string;
@@ -13,7 +13,7 @@ export type ConfigurationType = {
 };
 
 export class Configuration {
-  public constructor(private $attributes: ConfigurationType) {}
+  public constructor(private $attributes: ConfigurationAttributes) {}
 
   public directory() {
     return this.$attributes.directory || '.';

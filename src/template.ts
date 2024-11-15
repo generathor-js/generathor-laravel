@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 import { GeneratorForCollection, GeneratorForItem } from 'generathor';
-import { Configuration } from './configuration';
+import { Configuration, ConfigurationAttributes } from './configuration';
 import { Laravel } from './transformers/item/laravel';
 import { Menu } from './transformers/collection/menu';
 import { Route } from './transformers/collection/route';
@@ -24,11 +24,11 @@ type LaravelItem = Record<string, any>;
 export class LaravelGenerator {
   private $configuration: Configuration;
 
-  public constructor(configuration?: Configuration) {
+  public constructor(configuration?: ConfigurationAttributes) {
     if (!configuration) {
-      configuration = new Configuration({});
+      configuration = {};
     }
-    this.$configuration = configuration;
+    this.$configuration = new Configuration(configuration);
     HandlebarsHelper.configure();
   }
 
