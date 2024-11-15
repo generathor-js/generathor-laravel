@@ -339,7 +339,7 @@ const laravel = new LaravelGenerator({
     customParents: {
       users: 'App\\Models\\Jetstream\\User as Model',
     }
-  };
+  }
 });
 const dbSource = new Source({
   type: 'mysql',
