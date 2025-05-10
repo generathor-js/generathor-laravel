@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import { existsSync } from 'fs';
 import { GeneratorForCollection, GeneratorForItem } from 'generathor';
 import { Configuration, ConfigurationAttributes } from './configuration';
 import { Laravel } from './transformers/item/laravel';
@@ -23,12 +24,13 @@ type LaravelItem = Record<string, any>;
 
 export class LaravelGenerator {
   private $configuration: Configuration;
+  private $viewFolder: string;
 
   public constructor(configuration?: ConfigurationAttributes) {
-    if (!configuration) {
-      configuration = {};
-    }
+    configuration = configuration || {};
     this.$configuration = new Configuration(configuration);
+    this.$viewFolder =
+      this.$configuration.laravelVersion() == 12 ? 'laravel12' : 'laravel11';
     HandlebarsHelper.configure();
   }
 
@@ -73,6 +75,7 @@ export class LaravelGenerator {
         template: this.templateFile('eloquent/child'),
         source: this.$configuration.source(),
         directory: this.directory('/app/Models'),
+        overwriteFiles: false,
         prepareItems: (items) =>
           items.map((item: LaravelItem) => item.laravel.eloquent),
         fileName: (item) => item.model + '.php',
@@ -129,7 +132,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('menu')] = new GeneratorForItem({
-      template: this.templateFile('views/menu'),
+      template: this.templateFile(`views/${this.$viewFolder}/menu`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/generathor'),
       prepareItems: (items) =>
@@ -138,16 +141,17 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('base-controller')] = new GeneratorForItem({
-      template: this.templateFile('others/base-controller'),
+      template: this.templateFile(`others/${this.$viewFolder}/base-controller`),
       source: this.$configuration.source(),
       directory: this.directory('/app/Http/Controllers/Generathor'),
+      overwriteFiles: false,
       prepareItems: (items) =>
         new BaseController(items as Item[], this.$configuration).transform(),
       fileName: () => 'Controller.php',
     });
 
     templates[this.templateKey('create-form')] = new GeneratorForItem({
-      template: this.templateFile('views/form'),
+      template: this.templateFile(`views/${this.$viewFolder}/form`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/components/generathor'),
       prepareItems: (items) =>
@@ -156,7 +160,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('filter-form')] = new GeneratorForItem({
-      template: this.templateFile('views/form'),
+      template: this.templateFile(`views/${this.$viewFolder}/form`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/components/generathor'),
       prepareItems: (items) =>
@@ -165,7 +169,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('update-form')] = new GeneratorForItem({
-      template: this.templateFile('views/form'),
+      template: this.templateFile(`views/${this.$viewFolder}/form`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/components/generathor'),
       prepareItems: (items) =>
@@ -174,7 +178,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('attach-form')] = new GeneratorForItem({
-      template: this.templateFile('views/form'),
+      template: this.templateFile(`views/${this.$viewFolder}/form`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/components/generathor'),
       prepareItems: (items) =>
@@ -184,7 +188,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('create-relation-form')] = new GeneratorForItem({
-      template: this.templateFile('views/form'),
+      template: this.templateFile(`views/${this.$viewFolder}/form`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/components/generathor'),
       prepareItems: (items) =>
@@ -197,7 +201,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('filter-relation-form')] = new GeneratorForItem({
-      template: this.templateFile('views/form'),
+      template: this.templateFile(`views/${this.$viewFolder}/form`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/components/generathor'),
       prepareItems: (items) =>
@@ -219,7 +223,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('index-view')] = new GeneratorForItem({
-      template: this.templateFile('views/index'),
+      template: this.templateFile(`views/${this.$viewFolder}/index`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/generathor'),
       prepareItems: (items) =>
@@ -228,7 +232,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('edit-view')] = new GeneratorForItem({
-      template: this.templateFile('views/edit'),
+      template: this.templateFile(`views/${this.$viewFolder}/edit`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/generathor'),
       prepareItems: (items) =>
@@ -237,7 +241,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('show-view')] = new GeneratorForItem({
-      template: this.templateFile('views/show'),
+      template: this.templateFile(`views/${this.$viewFolder}/show`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/generathor'),
       prepareItems: (items) =>
@@ -246,7 +250,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('relation-item-view')] = new GeneratorForItem({
-      template: this.templateFile('views/relation-item'),
+      template: this.templateFile(`views/${this.$viewFolder}/relation-item`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/generathor'),
       prepareItems: (items) =>
@@ -255,7 +259,7 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('relation-list-view')] = new GeneratorForItem({
-      template: this.templateFile('views/relation-list'),
+      template: this.templateFile(`views/${this.$viewFolder}/relation-list`),
       source: this.$configuration.source(),
       directory: this.directory('/resources/views/generathor'),
       prepareItems: (items) =>
@@ -289,17 +293,80 @@ export class LaravelGenerator {
     templates[this.templateKey('pk-trait')] = new GeneratorForCollection({
       template: this.templateFile('others/pk-trait'),
       source: this.$configuration.source(),
+      overwriteFiles: false,
       prepareItems: () => [],
       file: this.directory('/app/Models/Generathor/GenerathorKey.php'),
     });
+
+    const laravelUserFile = this.directory('/app/Models/LaravelUser.php');
+    if (this.$configuration.createLaravel12UserModel()) {
+      templates[this.templateKey('l12-user-model')] =
+        new GeneratorForCollection({
+          template: this.templateFile('eloquent/laravel12/user'),
+          source: this.$configuration.source(),
+          overwriteFiles: false,
+          prepareItems: () => [],
+          file: laravelUserFile,
+        });
+    }
+    if (this.$configuration.createLaravel11UserModel()) {
+      templates[this.templateKey('l11-user-model')] =
+        new GeneratorForCollection({
+          template: this.templateFile('eloquent/laravel11/user'),
+          source: this.$configuration.source(),
+          overwriteFiles: false,
+          prepareItems: () => [],
+          file: laravelUserFile,
+        });
+    }
+
+    if (
+      !existsSync(laravelUserFile) &&
+      (this.$configuration.createLaravel12UserModel() ||
+        this.$configuration.createLaravel11UserModel())
+    ) {
+      templates[this.templateKey('relation-item-view')] = new GeneratorForItem({
+        template: this.templateFile('eloquent/child'),
+        source: this.$configuration.source(),
+        directory: this.directory('/app/Models'),
+        prepareItems: (items) =>
+          items
+            .filter((item: LaravelItem) => item.table == 'users')
+            .map((item: LaravelItem) => item.laravel.eloquent),
+        fileName: () => 'User.php',
+      });
+    }
 
     if (this.$configuration.createEloquentModelsOnly()) {
       return templates;
     }
 
+    if (this.$configuration.laravelVersion() == 12) {
+      templates[this.templateKey('banner')] = new GeneratorForCollection({
+        template: this.templateFile('views/laravel12/banner'),
+        source: this.$configuration.source(),
+        overwriteFiles: false,
+        prepareItems: () => [],
+        file: this.directory(
+          '/resources/views/components/generathor/banner.blade.php'
+        ),
+      });
+
+      templates[this.templateKey('pagination')] = new GeneratorForCollection({
+        template: this.templateFile('others/laravel12/pagination'),
+        source: this.$configuration.source(),
+        overwriteFiles: false,
+        prepareItems: () => [],
+        file: this.directory(
+          '/resources/views/vendor/pagination/tailwind.blade.php'
+        ),
+      });
+    }
+
     templates[this.templateKey('record-input')] = new GeneratorForCollection({
-      template: this.templateFile('views/record-input'),
+      template: this.templateFile(`views/${this.$viewFolder}/record-input`),
       source: this.$configuration.source(),
+      overwriteFiles: false,
       prepareItems: () => [],
       file: this.directory(
         '/resources/views/components/generathor/record-input.blade.php'
@@ -307,8 +374,9 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('breadcrumbs')] = new GeneratorForCollection({
-      template: this.templateFile('views/breadcrumbs'),
+      template: this.templateFile(`views/${this.$viewFolder}/breadcrumbs`),
       source: this.$configuration.source(),
+      overwriteFiles: false,
       prepareItems: () => [],
       file: this.directory(
         '/resources/views/components/generathor/breadcrumbs.blade.php'
@@ -316,8 +384,9 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('tabs')] = new GeneratorForCollection({
-      template: this.templateFile('views/tabs'),
+      template: this.templateFile(`views/${this.$viewFolder}/tabs`),
       source: this.$configuration.source(),
+      overwriteFiles: false,
       prepareItems: () => [],
       file: this.directory(
         '/resources/views/components/generathor/tabs.blade.php'
@@ -325,8 +394,9 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('modal')] = new GeneratorForCollection({
-      template: this.templateFile('views/modal'),
+      template: this.templateFile(`views/${this.$viewFolder}/modal`),
       source: this.$configuration.source(),
+      overwriteFiles: false,
       prepareItems: () => [],
       file: this.directory(
         '/resources/views/components/generathor/modal.blade.php'
@@ -334,8 +404,9 @@ export class LaravelGenerator {
     });
 
     templates[this.templateKey('loader')] = new GeneratorForCollection({
-      template: this.templateFile('views/loader'),
+      template: this.templateFile(`views/${this.$viewFolder}/loader`),
       source: this.$configuration.source(),
+      overwriteFiles: false,
       prepareItems: () => [],
       file: this.directory(
         '/resources/views/components/generathor/loader.blade.php'
@@ -364,6 +435,7 @@ export class LaravelGenerator {
       templates[this.templateKey(`icon-${icon}`)] = new GeneratorForCollection({
         template: this.templateFile('views/icons/' + icon),
         source: this.$configuration.source(),
+        overwriteFiles: false,
         prepareItems: () => [],
         file: this.directory(
           `/resources/views/components/generathor/icon-${icon}.blade.php`

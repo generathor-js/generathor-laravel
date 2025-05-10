@@ -2,3 +2,4 @@ src
 tsconfig.json
 .prettierrc
 eslint.config.mjs
+generathor.config.js

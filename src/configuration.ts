@@ -1,6 +1,9 @@
 export type ConfigurationAttributes = {
+  laravelVersion?: 11 | 12;
   createChildModel?: boolean;
   createEloquentModelsOnly?: boolean;
+  createLaravel12UserModel?: boolean;
+  createLaravel11UserModel?: boolean;
   reference?: string;
   source?: string;
   directory?: string;
@@ -21,6 +24,18 @@ export class Configuration {
 
   public reference() {
     return this.$attributes.reference || 'laravel-generathor';
+  }
+
+  public laravelVersion() {
+    return this.$attributes.laravelVersion || 12;
+  }
+
+  public createLaravel12UserModel() {
+    return this.$attributes.createLaravel12UserModel ?? false;
+  }
+
+  public createLaravel11UserModel() {
+    return this.$attributes.createLaravel11UserModel ?? false;
   }
 
   public source() {
@@ -49,14 +64,10 @@ export class Configuration {
   }
 
   public createChildModel() {
-    return typeof this.$attributes.createChildModel === 'undefined'
-      ? true
-      : this.$attributes.createChildModel;
+    return this.$attributes.createChildModel ?? true;
   }
 
   public createEloquentModelsOnly() {
-    return typeof this.$attributes.createEloquentModelsOnly === 'undefined'
-      ? false
-      : this.$attributes.createEloquentModelsOnly;
+    return this.$attributes.createEloquentModelsOnly ?? false;
   }
 }

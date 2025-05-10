@@ -1,0 +1,31 @@
+<x-{{layout}}>
+    <h2 class="font-medium text-zinc-800 dark:text-white text-2xl">
+        \{{__('{{header}}')}}
+    </h2>
+    <x-generathor.breadcrumbs :breadcrumbs="[
+        [
+            'label' => __('Home'),
+            'icon' => 'generathor.icon-home',
+            'url' => route('{{homeRoute}}')
+        ],
+        [
+            'label' => __('Manage'),
+            'icon' => 'generathor.icon-computer',
+            'url' => route('generathor.menu')
+        ],
+        [
+            'label' => __('{{listLabel}}'),
+            'url' => route('generathor.{{context}}.index')
+        ],
+        [
+            'label' => ${{recordName}}->getRecordLabel(),
+            'url' => route('generathor.{{context}}.show', ['{{recordName}}' => ${{recordName}}->getRouteKey()])
+        ],
+        [
+            'label' => __('Update')
+        ]
+    ]" />
+    <div class="mx-auto mt-6">
+        <x-generathor.{{context}}.update-form :{{recordName}}="${{recordName}}" />
+    </div>
+</x-{{layout}}>

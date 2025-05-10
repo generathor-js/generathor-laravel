@@ -1,0 +1,16 @@
+<ul {!! $attributes->only('class')->merge(['class' => 'flex flex-wrap text-sm font-medium text-center text-zinc-500 border-b border-zinc-200 dark:border-zinc-700 dark:text-zinc-400 space-x-2']) !!}>
+    @foreach($tabs as $tab)
+    <li>
+        @if (empty($tab['url']))
+        <span class="inline-block p-4 text-zinc-900 bg-gray-100 rounded-t-lg active dark:bg-zinc-700 dark:text-zinc-500">\{{$tab['label']}}</span>
+        @else
+        <a
+            class="inline-block p-4 rounded-t-lg hover:text-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            href="\{{$tab['url']}}"
+        >
+            \{{$tab['label']}}
+        </a>
+        @endif
+    </li>
+    @endforeach
+</ul>

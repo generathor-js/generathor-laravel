@@ -1,0 +1,124 @@
+<x-{{layout}}>
+    <h2 class="font-medium text-zinc-800 dark:text-white text-2xl">
+        \{{__('{{header}}')}}
+    </h2>
+    <x-generathor.breadcrumbs :breadcrumbs="[
+        [
+            'label' => __('Home'),
+            'icon' => 'generathor.icon-home',
+            'url' => route('{{homeRoute}}')
+        ],
+        [
+            'label' => __('Manage'),
+            'icon' => 'generathor.icon-computer',
+            'url' => route('generathor.menu')
+        ],
+        [
+            'label' => __('{{listLabel}}'),
+            'url' => route('generathor.{{context}}.index')
+        ],
+        [
+            'label' => ${{recordName}}->getRecordLabel(),
+        ],
+    ]" />
+    <div class="mx-auto">
+        <div class="w-full flex justify-end space-x-2">
+            <form method="POST" action="\{{route('generathor.{{context}}.destroy' , ['{{recordName}}' => ${{recordName}}->getRouteKey()])}}" x-data="{
+                deleteAlert() {
+                    return window.Swal.fire({
+                        title: '\{{ __('Are you sure?') }}',
+                        text: '\{{ __('You will not be able to revert this!') }}',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: '\{{ __('Yes') }}',
+                        cancelButtonText: '\{{ __('Cancel') }}',
+                        reverseButtons: true
+                    });
+                },
+                deleteRecord: async function() {
+                    const result = await this.deleteAlert();
+                    if (result.isConfirmed) {
+                        $root.submit();
+                        window.showLoading();
+                    }
+                }
+            }">
+                @method('DELETE')
+                @csrf
+                <input type="hidden" name="_url" value="\{{route('generathor.{{context}}.index')}}">
+                <div class="relative">
+                    <button type="button" @click="deleteRecord()" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm p-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-80 peer">
+                        <x-generathor.icon-trash class="!w-4 !h-4" />
+                    </button>
+                    <div class="absolute -top-9 left-1/2 -translate-x-1/2 z-10 opacity-0 transition-all ease-out peer-hover:opacity-100 px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-sm">\{{ __('Delete') }}</div>
+                </div>
+            </form>
+            <div class="relative">
+                <a href="\{{route('generathor.{{context}}.edit' , ['{{recordName}}' => ${{recordName}}->getRouteKey()])}}" type="button" class="focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex peer">
+                    <x-generathor.icon-pencil class="!w-4 !h-4" />
+                </a>
+                <div class="absolute -top-9 left-1/2 -translate-x-1/2 z-10 opacity-0 transition-all ease-out peer-hover:opacity-100 px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-sm">\{{ __('Update') }}</div>
+            </div>
+            <div class="relative">
+                <a href="\{{route('generathor.{{context}}.index')}}" class="focus:outline-none text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm p-2.5 dark:bg-zinc-600 dark:hover:bg-zinc-700 dark:focus:ring-gray-800 inline-flex peer">
+                    <x-generathor.icon-list-bullet />
+                </a>
+                <div class="absolute -top-9 left-1/2 -translate-x-1/2 text-nowrap z-10 opacity-0 transition-all ease-out peer-hover:opacity-100 px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-sm">\{{__('{{listLabel}}')}}</div>
+            </div>
+        </div>
+        <x-generathor.tabs class="mt-4" :tabs="[{{#each tabs}}
+            [
+                'label' => __('{{label}}'),{{#if route}}
+                'url' => route('{{route}}'{{#if routeRecord}}, ['{{routeRecord}}' => ${{routeRecord}}->getRouteKey()]{{/if}}),{{/if}}
+            ],{{/each}}
+        ]"/>
+        <div class="overflow-x-auto shadow-md mb-4 relative">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                {{#each columns}}
+                <tr class="bg-white border-b dark:bg-zinc-800 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-600">
+                    <td class="px-6 py-4 text-left font-semibold">\{{__('{{label}}')}}</td>
+                    <td class="px-6 py-4 text-right">
+{{#if (eq type "bool")}}
+{{#if nullable}}
+                        @if(!isset(${{../recordName}}->{{name}}))
+                        <span class="text-red-400">\{{__('Not defined')}}</span>
+                        @elseif(${{../recordName}}->{{name}})
+                        <x-generathor.icon-check-circle class="float-right" />
+                        @else
+                        <x-generathor.icon-x-circle class="float-right" />
+                        @endif
+{{else}}
+                        @if(${{../recordName}}->{{name}})
+                        <x-generathor.icon-check-circle class="float-right" />
+                        @else
+                        <x-generathor.icon-x-circle class="float-right" />
+                        @endif
+{{/if}}
+{{else if (eq type "record")}}
+{{#if nullable}}
+                        @if(isset(${{../recordName}}->{{name}}))
+                        <a href="\{{route('generathor.{{data.context}}.show' , ['{{data.routeRecordName}}' => ${{../recordName}}->{{data.relationAttribute}}->getRouteKey()])}}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">\{{ ${{../recordName}}->{{data.relationAttribute}}->getRouteKey() }} - \{{ ${{../recordName}}->{{data.relationAttribute}}->getRecordLabel() }}</a>
+                        @else
+                        <span class="text-red-400">\{{__('Not defined')}}</span>
+                        @endif
+{{else}}
+                        <a href="\{{route('generathor.{{data.context}}.show' , ['{{data.routeRecordName}}' => ${{../recordName}}->{{data.relationAttribute}}->getRouteKey()])}}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">\{{ ${{../recordName}}->{{data.relationAttribute}}->getRouteKey() }} - \{{ ${{../recordName}}->{{data.relationAttribute}}->getRecordLabel() }}</a>
+{{/if}}
+{{else}}
+{{#if nullable}}
+                        @if(isset(${{../recordName}}->{{name}}))
+                        \{{ ${{../recordName}}->{{name}} }}
+                        @else
+                        <span class="text-red-400">\{{__('Not defined')}}</span>
+                        @endif
+{{else}}
+                        \{{ ${{../recordName}}->{{name}} }}
+{{/if}}
+{{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </table>
+        </div>
+    </div>
+</x-{{layout}}>

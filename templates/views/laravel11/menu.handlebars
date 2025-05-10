@@ -1,0 +1,31 @@
+<x-{{layout}}>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            \{{__('Manage')}}
+        </h2>
+    </x-slot>
+    <div class="w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto overflow-hidden py-2">
+            <x-generathor.breadcrumbs :breadcrumbs="[
+                [
+                    'label' => __('Home'),
+                    'icon' => 'generathor.icon-home',
+                    'url' => route('{{homeRoute}}')
+                ],
+                [
+                    'label' => __('Manage'),
+                    'icon' => 'generathor.icon-computer'
+                ]
+            ]" />
+        </div>
+    </div>
+    <div class="max-w-7xl py-12 mx-auto sm:px-6 lg:px-8">
+        <div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-lg">
+            <div class="p-6 lg:p-8 bg-white dark:bg-gray-800 dark:bg-gradient-to-bl dark:from-gray-700/50 dark:via-transparent border-b border-gray-200 dark:border-gray-700">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">{{#each items}}
+                    <a href="\{{route('generathor.{{context}}.index')}}" class="w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700">\{{__('{{label}}')}}</a>{{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
+</x-{{layout}}>

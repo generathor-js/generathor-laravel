@@ -145,6 +145,44 @@ module.exports = {
 };
 ```
 
+You can optionally use the preconfigured generator with the following "shortcuts".
+
+```js
+const { Laravel11 } = require('generathor-laravel');
+
+const laravel = Laravel11.jetstreamEloquentModels();
+```
+
+```js
+const { Laravel11 } = require('generathor-laravel');
+
+const laravel = Laravel11.eloquentModels();
+```
+
+```js
+const { Laravel11 } = require('generathor-laravel');
+
+const laravel = Laravel11.jetstreamCrud();
+```
+
+```js
+const { Laravel12 } = require('generathor-laravel');
+
+const laravel = Laravel12.starterKitEloquentModels();
+```
+
+```js
+const { Laravel12 } = require('generathor-laravel');
+
+const laravel = Laravel12.eloquentModels();
+```
+
+```js
+const { Laravel12 } = require('generathor-laravel');
+
+const laravel = Laravel12.starterKitCrud();
+```
+
 Then, run the following command:
 
 ```bash
@@ -162,27 +200,33 @@ Also, you need to install the following packages:
 
 * alpinejs
 * @alpinejs/collapse
+* @alpinejs/mask
 * laravel-precognition-alpine
 * sweetalert2
 * @fortawesome/fontawesome-free
+* axios
 
 ```bash
-npm i -D alpinejs @alpinejs/collapse laravel-precognition-alpine sweetalert2 @fortawesome/fontawesome-free
+npm i -D alpinejs @alpinejs/collapse @alpinejs/mask laravel-precognition-alpine sweetalert2 @fortawesome/fontawesome-free axios
 ```
 
 File `app.js` must contain:
 
 ```js
 import Alpine from 'alpinejs';
-import collapse from '@alpinejs/collapse'
+import collapse from '@alpinejs/collapse';
+import mask from '@alpinejs/mask';
 import Precognition from 'laravel-precognition-alpine';
 import Swal from 'sweetalert2';
+import axios from 'axios';// Laravel 11 import this by default in bootstrap.js
 
+window.axios = axios;
 window.Alpine = Alpine;
 window.Swal = Swal;
 
 Alpine.plugin(Precognition);
 Alpine.plugin(collapse);
+Alpine.plugin(mask);
 Alpine.start();
 ```
 
@@ -204,7 +248,7 @@ Route::prefix('manage')->group(function () {
 
 #### Set up your 'home' route
 
-You neet to set up your `home` route. You can change the home route reference in the `generathor.config.cjs` file.
+You need to set up your `home` route. You can change the home route reference in the `generathor.config.cjs` file.
 
 ```php
 Route::get('/', function () {
@@ -287,7 +331,13 @@ if (typeof Livewire !== undefined) {
 Add the following code in `layout.blade.php` or in your layout:
 
 ```blade
+<!-- LARAVEL 11 -->
 <x-generathor.loader />
+<x-banner /><!-- You can use this with laravel 11 + jetstream  -->
+
+<!-- LARAVEL 12 -->
+<x-generathor.loader />
+<x-generathor.banner /><!-- Only needed with laravel 12 -->
 ```
 
 #### Set up header (optional)
@@ -313,6 +363,9 @@ You can modify settings in the `generathor.config.cjs` file.
 | `createChildModel`         | `No`     | boolean                | true                                 | Prevents overwriting the child class of a model, so you retain your custom changes. |
 | `createEloquentModelsOnly` | `No`     | boolean                | false                                | Creates only Eloquent models, skipping the generation of other files.               |
 | `reference`                | `No`     | string                 | 'laravel-generathor'                 | Reference name used in templates.                                                   |
+| `laravelVersion`           | `No`     | 11 or 12               | 12                                   | Laravel application version.                                                        |
+| `createLaravel11UserModel` | `No`     | boolean                | false                                | Check if a custom laravel 11 user model is required.                                |
+| `createLaravel12UserModel` | `No`     | boolean                | false                                | Check if a custom laravel 12 user model is required.                                |
 | `source`                   | `No`     | string                 | 'db'                                 | Reference to the Generathor source for database structure.                          |
 | `directory`                | `No`     | string                 | '.'                                  | Directory path for the Laravel project.                                             |
 | `homeRoute`                | `No`     | string                 | 'home'                               | Initial base route, used for redirection to the home page.                          |
