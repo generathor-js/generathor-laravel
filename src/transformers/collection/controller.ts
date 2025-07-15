@@ -31,7 +31,9 @@ export class Controller extends BaseTransformer {
 
       for (const relation of item.relations) {
         const label = naming.relationLabel(relation, item.table);
-        queryRelations.push(naming.relationAttribute(relation, item.table));
+        if (relation.type !== 'has-many') {
+          queryRelations.push(naming.relationAttribute(relation, item.table));
+        }
         const capitalizedRelationAttribute =
           naming.capitalizedRelationAttribute(relation, item.table);
         const relationContext = naming.relationContext(relation, item.table);
@@ -167,6 +169,9 @@ export class Controller extends BaseTransformer {
     const queryRelations = [];
     const relatedItem = itemsByTable[currentRelation.on.table];
     for (const relation of relatedItem.relations) {
+      if (relation.type === 'has-many') {
+        continue;
+      }
       if (
         relation.on.table === item.table &&
         relation.columns[0] === currentRelation.references[0]
