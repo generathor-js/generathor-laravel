@@ -19,37 +19,32 @@
 
 # Generathor Laravel
 
-**Generathor Laravel** allows you to automatically generate Eloquent models and CRUD operations based on your database structure.
-
----
-
-## Table of Contents
-
-1. [Installation](#installation)
-2. [Generating Files](#generating-files)
-    1. [Generating Eloquent Models](#generating-eloquent-models)
-    2. [Generating Eloquent Models and CRUDs](#generating-eloquent-models-and-cruds)
-3. [Additional Settings](#additional-settings)
-4. [Files](#files)
-5. [TODO](#todo)
+**Generathor Laravel** allows you to automatically generate Eloquent models and Livewire CRUDs (using Flux UI) based on your database structure.
 
 ---
 
 ## Installation
 
-To begin using Generathor Laravel, install the necessary dependencies:
+Install the core dependencies:
 
 ```bash
-$ npm i -D generathor generathor-db generathor-laravel mysql2
+$ npm i -D generathor generathor-db generathor-laravel
 ```
 
-Then, create the generathor configuration file:
+Depending on your database, install the driver you need:
+```bash
+# For MySQL
+$ npm i -D mysql2
+
+# For PostgreSQL
+$ npm i -D pg
+```
+
+Create the configuration file:
 
 ```bash
 $ touch generathor.config.cjs
 ```
-
-> The content of the configuration file will depend on what you want to generate.
 
 Add the following script to your `package.json`:
 
@@ -61,184 +56,90 @@ Add the following script to your `package.json`:
 
 ---
 
+## Configuration
+
+In your `generathor.config.cjs`, set up the connection to your database and specify the generator configuration. 
+
+You can choose to generate only **Eloquent** models, or **Livewire** components with their corresponding views.
+
+### Generating Livewire CRUDs
+
+This will generate Eloquent models, Livewire components, and views for the CRUD interface.
+
+```javascript
+const { Source } = require('generathor-db');
+const { livewire } = require('generathor-laravel');
+
+const dbSource = new Source({
+  type: 'mysql', // or 'postgres'
+  configuration: {
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    password: 'password',
+    database: 'my_database'
+  },
+  excludes: ['migrations']
+});
+
+module.exports = {
+  sources: {
+    db: dbSource,
+  },
+  generators: livewire()
+};
+```
+
+### Generating Eloquent Models Only
+
+If you only need the models without the CRUD UI:
+
+```javascript
+const { Source } = require('generathor-db');
+const { eloquent } = require('generathor-laravel');
+
+const dbSource = new Source({
+  type: 'mysql', // or 'postgres'
+  configuration: {
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    password: 'password',
+    database: 'my_database'
+  },
+  excludes: ['migrations']
+});
+
+module.exports = {
+  sources: {
+    db: dbSource,
+  },
+  generators: eloquent()
+};
+```
+
+---
+
 ## Generating Files
 
-Whether you need to generate Eloquent models or CRUDs, you must install the PHP dependencies by running the following command:
+Once configured, execute the script to generate your files:
+
+```bash
+$ npm run generathor
+```
+
+**Requirements:**
+The generated UI components use [Flux UI](https://fluxui.dev/) primitives and [Livewire](https://livewire.laravel.com/). Make sure they are installed and configured in your Laravel application before using the generated views.
+
+You must also install the required PHP dependencies in your Laravel project:
 
 ```bash
 $ composer require tucker-eric/eloquentfilter kyslik/column-sortable
 ```
 
-Next, follow one of the steps below.
+### Expose the routes
 
----
-
-### Generating Eloquent Models
-
-Your `generathor.config.cjs` file should look like this:
-
-```js
-const { Source } = require('generathor-db');
-const { LaravelGenerator } = require('generathor-laravel');
-
-const laravel = new LaravelGenerator({
-  createEloquentModelsOnly: true
-});
-const dbSource = new Source({
-  type: 'mysql',
-  configuration: {
-    host: 'localhost',
-    port: '3306',
-    user: 'my_user',
-    password: 'my_password',
-    database: 'my_database'
-  },
-  excludes: ['migrations']
-}, [
-  laravel.transformer.bind(laravel)
-]);
-
-module.exports = {
-  sources: {
-    db: dbSource,
-  },
-  generators: laravel.generators()
-};
-```
-
-Then, run the following command:
-
-```bash
-$ npm run generathor
-```
-
----
-
-### Generating Eloquent Models and CRUDs
-
-Your `generathor.config.cjs` file should look like this:
-
-```js
-const { Source } = require('generathor-db');
-const { LaravelGenerator } = require('generathor-laravel');
-
-const laravel = new LaravelGenerator();
-const dbSource = new Source({
-  type: 'mysql',
-  configuration: {
-    host: 'localhost',
-    port: '3306',
-    user: 'my_user',
-    password: 'my_password',
-    database: 'my_database'
-  },
-  excludes: ['migrations']
-}, [
-  laravel.transformer.bind(laravel)
-]);
-
-module.exports = {
-  sources: {
-    db: dbSource,
-  },
-  generators: laravel.generators()
-};
-```
-
-You can optionally use the preconfigured generator with the following "shortcuts".
-
-```js
-const { Laravel11 } = require('generathor-laravel');
-
-const laravel = Laravel11.jetstreamEloquentModels();
-```
-
-```js
-const { Laravel11 } = require('generathor-laravel');
-
-const laravel = Laravel11.eloquentModels();
-```
-
-```js
-const { Laravel11 } = require('generathor-laravel');
-
-const laravel = Laravel11.jetstreamCrud();
-```
-
-```js
-const { Laravel12 } = require('generathor-laravel');
-
-const laravel = Laravel12.starterKitEloquentModels();
-```
-
-```js
-const { Laravel12 } = require('generathor-laravel');
-
-const laravel = Laravel12.eloquentModels();
-```
-
-```js
-const { Laravel12 } = require('generathor-laravel');
-
-const laravel = Laravel12.starterKitCrud();
-```
-
-Then, run the following command:
-
-```bash
-$ npm run generathor
-```
-
-To make everything work, it's necessary to set up other things in your project:
-
-#### Installing frontend dependencies
-
-You need to install TailwindCSS:
-[https://tailwindcss.com/docs/guides/laravel](https://tailwindcss.com/docs/guides/laravel)
-
-Also, you need to install the following packages:
-
-* alpinejs
-* @alpinejs/collapse
-* @alpinejs/mask
-* laravel-precognition-alpine
-* sweetalert2
-* @fortawesome/fontawesome-free
-* axios
-
-```bash
-npm i -D alpinejs @alpinejs/collapse @alpinejs/mask laravel-precognition-alpine sweetalert2 @fortawesome/fontawesome-free axios
-```
-
-File `app.js` must contain:
-
-```js
-import Alpine from 'alpinejs';
-import collapse from '@alpinejs/collapse';
-import mask from '@alpinejs/mask';
-import Precognition from 'laravel-precognition-alpine';
-import Swal from 'sweetalert2';
-import axios from 'axios';// Laravel 11 import this by default in bootstrap.js
-
-window.axios = axios;
-window.Alpine = Alpine;
-window.Swal = Swal;
-
-Alpine.plugin(Precognition);
-Alpine.plugin(collapse);
-Alpine.plugin(mask);
-Alpine.start();
-```
-
-File `app.css` must contain:
-
-```css
-@import "@fortawesome/fontawesome-free/css/all.css";
-```
-
-#### Expose the routes
-
-Add generatehor routes to `routes/web.php`:
+Add generathor routes to `routes/web.php`:
 
 ```php
 Route::prefix('manage')->group(function () {
@@ -246,9 +147,9 @@ Route::prefix('manage')->group(function () {
 });
 ```
 
-#### Set up your 'home' route
+### Set up your 'home' route
 
-You need to set up your `home` route. You can change the home route reference in the `generathor.config.cjs` file.
+You need to set up your home route. You can change the home route reference in the `generathor.config.cjs` file.
 
 ```php
 Route::get('/', function () {
@@ -256,218 +157,20 @@ Route::get('/', function () {
 })->name('home');
 ```
 
-#### Set up datepickers (optional)
-
-Install the following package:
-
-```bash
-npm i -D flatpickr
-```
-
-Add the following code to `app.js`:
-
-```js
-import flatpickr from 'flatpickr';
-
-flatpickr('.input-datetime', {
-  enableTime: true,
-  enableSeconds: true,
-  dateFormat: 'Y-m-d H:i:S',
-});
-flatpickr('.input-date', {
-  dateFormat: 'Y-m-d',
-});
-flatpickr('.input-time', {
-  noCalendar: true,
-  enableTime: true,
-  enableSeconds: true,
-  dateFormat: 'H:i:S',
-});
-```
-
-Add the following code to `app.css`:
-
-```css
-@import "flatpickr/dist/flatpickr.css";
-```
-
-#### Set up loading spinner (optional)
-
-Add the following code to `app.js`:
-
-```js
-const loader = document.getElementById('generathor-loader');
-window.showLoading = () => {
-  if (loader) {
-    loader.classList.remove('hidden');
-    loader.classList.add('flex');
-  }
-};
-window.hideLoading = () => {
-  if (loader) {
-    loader.classList.remove('flex');
-    loader.classList.add('hidden');
-  }
-};
-
-const forms = document.getElementsByTagName('form');
-for (const form of forms) {
-  form.addEventListener('submit', window.showLoading);
-}
-
-// Only for Livewire
-if (typeof Livewire !== undefined) {
-  Livewire.hook('commit', ({ succeed, fail }) => {
-    succeed(() => {
-      window.hideLoading();
-    });
-    fail(() => {
-      window.hideLoading();
-    });
-  });
-}
-```
-
-Add the following code in `layout.blade.php` or in your layout:
-
-```blade
-<!-- LARAVEL 11 -->
-<x-generathor.loader />
-<x-banner /><!-- You can use this with laravel 11 + jetstream  -->
-
-<!-- LARAVEL 12 -->
-<x-generathor.loader />
-<x-generathor.banner /><!-- Only needed with laravel 12 -->
-```
-
-#### Set up header (optional)
-
-You can define a header in your layout. For example, in `layout.blade.php` or in your layout:
-
-```blade
-@if(isset($header))
-<div>
-    {{$header}}
-</div>
-@endif
-```
-
 ---
 
-## Additional settings
+## Configuration Options
 
-You can modify settings in the `generathor.config.cjs` file.
+When calling `eloquent(options)` or `livewire(options)`, you can pass an object with the following optional settings:
 
-| Variable                   | Required | Type                   | Default                              | Description                                                                         |
-|----------------------------|----------|------------------------|--------------------------------------|-------------------------------------------------------------------------------------|
-| `createChildModel`         | `No`     | boolean                | true                                 | Prevents overwriting the child class of a model, so you retain your custom changes. |
-| `createEloquentModelsOnly` | `No`     | boolean                | false                                | Creates only Eloquent models, skipping the generation of other files.               |
-| `reference`                | `No`     | string                 | 'laravel-generathor'                 | Reference name used in templates.                                                   |
-| `laravelVersion`           | `No`     | 11 or 12               | 12                                   | Laravel application version.                                                        |
-| `createLaravel11UserModel` | `No`     | boolean                | false                                | Check if a custom laravel 11 user model is required.                                |
-| `createLaravel12UserModel` | `No`     | boolean                | false                                | Check if a custom laravel 12 user model is required.                                |
-| `source`                   | `No`     | string                 | 'db'                                 | Reference to the Generathor source for database structure.                          |
-| `directory`                | `No`     | string                 | '.'                                  | Directory path for the Laravel project.                                             |
-| `homeRoute`                | `No`     | string                 | 'home'                               | Initial base route, used for redirection to the home page.                          |
-| `layout`                   | `No`     | string                 | 'layout'                             | Main layout of your project.                                                        |
-| `eloquent`                 | `No`     | object                 |                                      | Object for defining parent classes for models.                                      |
-| `eloquent.parent`          | `No`     | string                 | 'Illuminate\Database\Eloquent\Model' | General parent class for models.                                                    |
-| `eloquent.customParents`   | `No`     | Record<string, string> | {}                                   | Parent class by table, allowing custom parent classes for specific tables.          |
-
-Example
-
-```js
-const { Source } = require('generathor-db');
-const { LaravelGenerator }= require('generathor-laravel-testing');
-
-const laravel = new LaravelGenerator({
-  ccreateChildModel: true,
-  createEloquentModelsOnly: false,
-  reference: 'laravel',
-  source: 'db2',
-  directory: './project',
-  homeRoute: 'index',
-  layout: 'app',
-  eloquent: {
-    parent: 'App\\Models\\Model',
-    customParents: {
-      users: 'App\\Models\\Jetstream\\User as Model',
-    }
-  }
-});
-const dbSource = new Source({
-  type: 'mysql',
-  configuration: {
-    host: 'localhost',
-    port: '3306',
-    user: 'my_user',
-    password: 'my_password',
-    database: 'my_database'
-  },
-  excludes: ['migrations']
-}, [
-  laravel.transformer.bind(laravel)
-]);
-
-module.exports = {
-  sources: {
-    db: dbSource,
-  },
-  generators: laravel.generators()
-};
-```
-
----
-
-## Files
-
-* `app/Models/Generathor/[model].php` (for each table)
-* `app/Models/[model].php` (for each table)
-* `app/ModelFilters/[filter].php` (for each table)
-* `app/Http/Requests/Generathor/[create-request].php` (for each table)
-* `app/Http/Requests/Generathor/[update-request].php` (for each table)
-* `app/Http/Requests/Generathor/[filter-request].php` (for each table)
-* `app/Http/Requests/Generathor/[attach-request].php` (for each 'has-many' relationship in each table)
-* `resources/views/generathor/menu.blade.php`
-* `routes/generathor.php`
-* `app/Http/Controllers/Generathor/Controller.php`
-* `app/Http/Controllers/Generathor/[controller].php` (for each table)
-* `resources/views/generathor/[table-context]/index.blade.php` (for each table)
-* `resources/views/generathor/[table-context]/edit.blade.php` (for each table)
-* `resources/views/generathor/[table-context]/show.blade.php` (for each table)
-* `resources/views/generathor/[table-context]/[relation].blade.php` (for each relationship in each table)
-* `resources/views/components/generathor/[table-context]/create-form.blade.php` (for each table)
-* `resources/views/components/generathor/[table-context]/filter-form.blade.php` (for each table)
-* `resources/views/components/generathor/[table-context]/update-form.blade.php` (for each table)
-* `resources/views/components/generathor/[table-context]/[attach-form].blade.php` (for each 'has-many' relationship in each table)
-* `resources/views/components/generathor/[table-context]/[create-form].blade.php` (for each relationship in each table)
-* `resources/views/components/generathor/[table-context]/[filter-form].blade.php` (for each 'has-many' relationship in each table)
-* `app/Models/Generathor/GenerathorKey.php`
-* `resources/views/components/generathor/record-input.blade.php`
-* `resources/views/components/generathor/breadcrumbs.blade.php`
-* `resources/views/components/generathor/tabs.blade.php`
-* `resources/views/components/generathor/modal.blade.php`
-* `resources/views/components/generathor/loader.blade.php`
-* `resources/views/components/generathor/icon-check-circle.blade.php`
-* `resources/views/components/generathor/icon-chevron-right.blade.php`
-* `resources/views/components/generathor/icon-computer.blade.php`
-* `resources/views/components/generathor/icon-eye.blade.php`
-* `resources/views/components/generathor/icon-funnel.blade.php`
-* `resources/views/components/generathor/icon-home.blade.php`
-* `resources/views/components/generathor/icon-pencil.blade.php`
-* `resources/views/components/generathor/icon-plus.blade.php`
-* `resources/views/components/generathor/icon-trash.blade.php`
-* `resources/views/components/generathor/icon-x-circle.blade.php`
-* `resources/views/components/generathor/icon-x.blade.php`
-* `resources/views/components/generathor/icon-chevron-down.blade.php`
-* `resources/views/components/generathor/icon-list-bullet.blade.php`
-* `resources/views/components/generathor/icon-link.blade.php`
-* `resources/views/components/generathor/icon-unlink.blade.php`
-
----
-
-## TODO
-
-- [ ] Separate inputs into components.
-- [ ] Customize inputs based on prefix or specific logic.
-- [ ] TBD
+| Variable                   | Type                   | Default                              | Description                                                                         |
+|----------------------------|------------------------|--------------------------------------|-------------------------------------------------------------------------------------|
+| `directory`                | string                 | '.'                                  | Directory path for the Laravel project.                                             |
+| `reference`                | string                 | 'laravel'                            | Reference name used in templates.                                                   |
+| `laravelVersion`           | 13                     | 13                                   | Laravel application version.                                                        |
+| `createLaravelUserModel`   | boolean                | false                                 | Check if a custom Laravel user model is required.                                   |
+| `onlyEloquentModels`       | boolean                | true (eloquent) / false (livewire)   | Creates only Eloquent models, skipping the generation of other files.               |
+| `source`                   | string                 | 'db'                                 | Reference to the Generathor source for database structure.                          |
+| `homeRoute`                | string                 | 'home'                               | Initial base route, used for redirection.                                           |
+| `eloquent.parent`          | string                 | 'Illuminate\Database\Eloquent\Model' | General parent class for models.                                                    |
+| `eloquent.customParents`   | Record<string, string> | {}                                   | Custom parent class by table, e.g. `{ users: 'App\\Models\\User' }`.                |

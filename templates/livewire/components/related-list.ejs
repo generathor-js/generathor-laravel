@@ -1,0 +1,99 @@
+<?php
+namespace App\Livewire\Generathor\Components;
+
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+/**
+ * @property $form
+ * @property $record
+ */
+abstract class RelatedListComponent extends Component
+{
+    use WithPagination;
+    use WithFilterableList;
+    use WithMessages;
+    use WithErrorHandler;
+
+    public $currentId = null;
+    public $showDeleteModal = false;
+
+    #[Computed]
+    public function items()
+    {
+        return $this->relation()
+            ->sortable([
+                $this->sort => $this->direction,
+            ])
+            ->filter($this->filters)
+            ->paginate(20);
+    }
+
+    public function rendering($view)
+    {
+        $view->title($this->titleComponent());
+    }
+
+    public function boot() {
+        $this->bootFilters();
+    }
+
+    public function delete()
+    {
+        try {
+            $modelClass = $this->relationModelClass();
+            $record = $modelClass::findOrFail($this->currentId);
+            if (!$this->checkRelated($record)) {
+                $this->withErrorMessage(__('Record not found'));
+                return;
+            }
+            $record->delete();
+            $this->withSuccessMessage(__('Record deleted successfully'));
+        } catch (\Exception $e) {
+            $this->handleError($e);
+        }
+        $this->setCurrentId(null);
+    }
+
+    protected function checkRelated($related)
+    {
+        $references = $this->relationReferences();
+        foreach($references as $relationColumn => $recordColumn) {
+            if ($related->$relationColumn != $this->record->$recordColumn) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function setCurrentId($id)
+    {
+        $this->currentId = $id;
+        $this->showDeleteModal = boolval($id);
+    }
+
+    public function save()
+    {
+        try {
+            $references = $this->relationReferences();
+            foreach($references as $relationColumn => $recordColumn) {
+                $this->form->$relationColumn = $this->record->$recordColumn;
+            }
+            $this->form->save();
+            $this->withSuccessMessage(__('Record created successfully'));
+            $this->redirect(url()->previous(), navigate: true);
+        } catch (\Exception $e) {
+            $this->handleError($e);
+        }
+    }
+
+    abstract protected function titleComponent(): string;
+
+    abstract protected function relationModelClass(): string;
+
+    abstract protected function relation();
+
+    abstract protected function relationReferences(): array;
+}

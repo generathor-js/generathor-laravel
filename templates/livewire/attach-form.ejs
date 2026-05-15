@@ -1,0 +1,52 @@
+<?php
+<%
+const table = definition.table;
+const modelClass = helpers.naming.modelClass(table);
+const fks = helpers.item.foreignKeysMap(definition);
+const inputs = [];
+const rules = {};
+const keyMap = definition.primaryKey.columns.reduce((acc, key) => {
+    acc[key] = true;
+    return acc;
+}, {});
+const inputsByColumn = (column) => {
+    if (column.autoincrement) {
+        return [{
+            type: 'record',
+            name: column.name,
+            label: helpers.naming.columnLabel(column),
+            data: {
+                context: helpers.naming.searchContext(table),
+            },
+        }];
+    }
+
+    return helpers.column.inputsByColumn(column, fks);
+}
+const rulesByColumn = (column) => {
+    if (column.autoincrement) {
+        return ['required', helpers.type.ruleType(column)];
+    }
+
+    return helpers.column.rules(column);
+}
+definition.columns.forEach((column) => {
+    if (!keyMap[column.name]) {
+        return;
+    }
+    inputsByColumn(column).forEach((input) => inputs.push(input));
+    rules[column.name] = rulesByColumn(column).join('|');
+});
+const defaultInputValues = helpers.column.defaultInputValues(definition.columns, fks);
+%>
+namespace App\Livewire\Generathor\Forms;
+
+use Livewire\Attributes\Validate;
+use Livewire\Form;
+
+class Attach<%= modelClass %>Form extends Form
+{<% for(const input of inputs) { %>
+    #[Validate('<%= rules[input.name] %>')]
+    public $<%= input.name %> = <%- defaultInputValues[input.name] !== null && typeof defaultInputValues[input.name] === 'string' ? `'${defaultInputValues[input.name]}'` : defaultInputValues[input.name] || 'null' %>;
+<% } %>
+}

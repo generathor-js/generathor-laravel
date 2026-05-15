@@ -1,0 +1,20 @@
+<?php
+namespace App\Livewire\Generathor\Components;
+
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
+
+trait WithErrorHandler
+{
+    protected function handleError($exception)
+    {
+        if (is_a($exception, ValidationException::class)) {
+            throw $exception;
+        }
+        if (is_a($exception, ModelNotFoundException::class)) {
+            $this->withErrorMessage(__('Record not found'));
+            return;
+        }
+        $this->withErrorMessage($exception->getMessage() ?? __('Something went wrong'));
+    }
+}

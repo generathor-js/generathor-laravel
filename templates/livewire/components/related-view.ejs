@@ -1,0 +1,102 @@
+<?php
+namespace App\Livewire\Generathor\Components;
+
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use Livewire\WithPagination;
+use Flux\Flux;
+
+/**
+ * @property $form
+ * @property $record
+ */
+abstract class RelatedViewComponent extends Component
+{
+    use WithPagination;
+    use WithMessages;
+    use WithErrorHandler;
+
+    #[Computed]
+    public function related()
+    {
+        return $this->relation();
+    }
+
+    public function rendering($view)
+    {
+        $view->title($this->titleComponent());
+    }
+
+    public function detach()
+    {
+        try {
+            $this->detachRecord();
+            $this->withSuccessMessage(__('Record detached successfully'));
+        } catch (\Exception $e) {
+            $this->handleError($e);
+        }
+    }
+
+    public function delete()
+    {
+        try {
+            $relation = $this->relation();
+            $this->detachRecord();
+            $relation->delete();
+            $this->withSuccessMessage(__('Record deleted successfully'));
+        } catch (\Exception $e) {
+            $this->record->refresh();
+            $this->handleError($e);
+        }
+    }
+
+    public function save()
+    {
+        try {
+            $this->form->save();
+            $relation = $this->form->record;
+            $references = $this->relationReferences();
+            foreach($references as $relationColumn => $recordColumn) {
+                $this->record->$recordColumn = $relation->$relationColumn;
+            }
+            $this->record->save();
+            $this->withSuccessMessage(__('Record created successfully'));
+            Flux::modals()->close();
+        } catch (\Exception $e) {
+            $this->handleError($e);
+        }
+    }
+
+    public function attach()
+    {
+        try {
+            $this->attachForm->validate();
+            $references = $this->relationReferences();
+            foreach($references as $relationColumn => $recordColumn) {
+                $this->record->$recordColumn = $this->attachForm->$relationColumn;
+            }
+            $this->record->save();
+            $this->withSuccessMessage(__('Record attached successfully'));
+            Flux::modals()->close();
+        } catch (\Exception $e) {
+            $this->handleError($e);
+        }
+    }
+
+    protected function detachRecord()
+    {
+        $clone = clone $this->record;
+        $references = $this->relationReferences();
+        foreach($references as $relationColumn => $recordColumn) {
+            $clone->$recordColumn = null;
+        }
+        $clone->save();
+        $this->record = $clone;
+    }
+
+    abstract protected function titleComponent(): string;
+
+    abstract protected function relation();
+
+    abstract protected function relationReferences(): array;
+}

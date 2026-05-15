@@ -1,0 +1,9 @@
+@props(['name', 'open' => false])
+<div x-data="{ open: @js($open) }" 
+     x-on:disclosure-toggle.window="if ($event.detail.name === '{{ $name }}') open = ! open"
+     x-show="open" 
+     x-collapse 
+     x-cloak 
+     {{ $attributes }}>
+    {{ $slot }}
+</div>

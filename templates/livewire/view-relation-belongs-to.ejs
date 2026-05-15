@@ -1,0 +1,277 @@
+<?php
+<%
+const homeRoute = configuration.homeRoute();
+const table = definition.table;
+const modelClass = helpers.naming.modelClass(table);
+const modelLabel = helpers.naming.listLabel(table);
+const context = helpers.naming.context(table);
+const relatedContext = helpers.naming.context(relatedItem.table);
+const relatedLabel = helpers.naming.relationLabel(relation, table);
+const fks = helpers.item.foreignKeysMap(definition);
+const relatedFks = helpers.item.foreignKeysMap(relatedItem);
+const relationAttributName = helpers.naming.relationAttribute(relation, table);
+const relatedModelClass = helpers.naming.modelClass(relation.on.table);
+const capitalizedRelationAttribute = helpers.naming.capitalizedRelationAttribute(relation, table);
+const references = relation.references.reduce((acc, reference, index) => {
+    acc[reference] = relation.columns[index];
+    return acc;
+}, {});
+const createFormInputs = [];
+const attachFormInputs = [];
+const columns = relatedItem.columns.map((column) => {
+    let type = column.type;
+    let relationAttribute = null;
+    if (relatedFks[column.name]) {
+        type = 'record';
+        relationAttribute = helpers.naming.relationAttribute(relatedFks[column.name], relatedItem.table);
+    }
+    helpers.column.inputsByColumn(column, relatedFks)
+        .forEach((input) => createFormInputs.push(input));
+
+    return {
+        relationAttribute,
+        type,
+        name: column.name,
+        label: helpers.naming.columnLabel(column),
+        nullable: column.nullable,
+        context: relatedFks[column.name] ? helpers.naming.context(relatedFks[column.name].on.table) : null,
+    };
+});
+const inputsByColumn = (column) => {
+    if (column.autoincrement) {
+        return [{
+            type: 'record',
+            name: column.name,
+            label: helpers.naming.columnLabel(column),
+            data: {
+                context: helpers.naming.searchContext(relatedItem.table),
+            },
+        }];
+    }
+
+    return helpers.column.inputsByColumn(column, fks);
+}
+const keyMap = relatedItem.primaryKey.columns.reduce((acc, key) => {
+    acc[key] = true;
+    return acc;
+}, {});
+relatedItem.columns.forEach((column) => {
+    if (!keyMap[column.name]) {
+        return;
+    }
+    inputsByColumn(column).forEach((input) => attachFormInputs.push(input));
+});
+const tabs = definition.relations.map((relation) => {
+    return {
+        label: helpers.naming.relationLabel(relation, definition.table),
+        attribute: helpers.naming.capitalizedRelationAttribute(relation, definition.table),
+    };
+});
+const defaultInputValues = helpers.column.defaultInputValues(relatedItem.columns, relatedFks);
+%>
+use App\Models\<%= modelClass %>;
+use App\Livewire\Generathor\Components\RelatedViewComponent;
+use App\Livewire\Generathor\Forms\<%= relatedModelClass %>Form;
+use App\Livewire\Generathor\Forms\Attach<%= relatedModelClass %>Form;
+
+new class extends RelatedViewComponent
+{
+    public <%= modelClass %> $record;
+
+    public <%= relatedModelClass %>Form $form;
+
+    public Attach<%= relatedModelClass %>Form $attachForm;
+
+    protected function relation()
+    {
+        return $this->record-><%= relationAttributName %>;
+    }
+
+    protected function relationReferences(): array
+    {
+        return [<% for(const column in references) { %>
+            '<%= column %>' => '<%= references[column] %>',<% } %>
+        ];
+    }
+
+    protected function titleComponent(): string
+    {
+       return $this->record->getRecordLabel();
+    }
+} ?>
+<div>
+    <flux:heading size="xl">{{ __('<%= modelLabel %>') }}</flux:heading>
+    <flux:breadcrumbs>
+        <flux:breadcrumbs.item :href="route('<%= homeRoute %>')">{{ __('Home') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item :href="route('generathor.menu')">{{ __('Manage') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item :href="route('generathor.<%= context %>.index')">{{ __('<%= modelLabel %>') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item :href="route('generathor.<%= context %>.show', ['record' => $record->getRouteKey()])">{{ $record->getRecordLabel() }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>{{ __('<%= relatedLabel %>') }}</flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <div class="flex justify-end gap-1 mb-1 mt-4">
+        @if($this->related)
+        <flux:button :href="route('generathor.<%= relatedContext %>.show', ['record' => $this->related->getRouteKey()])" size="sm" icon="eye">{{ __('View') }}</flux:button>
+        <flux:button :href="route('generathor.<%= relatedContext %>.edit', ['record' => $this->related->getRouteKey(), 'return_url' => route('generathor.<%= context %>.show<%= capitalizedRelationAttribute %>', ['record' => $record->getRouteKey()])])" size="sm" icon="pencil">{{ __('Edit') }}</flux:button>
+        <flux:modal.trigger name="detach-confirmation-modal">
+            <flux:button size="sm" icon="link-slash" class="cursor-pointer">{{ __('Detach') }}</flux:button>
+        </flux:modal.trigger>
+        <flux:modal.trigger name="delete-confirmation-modal">
+            <flux:button size="sm" icon="trash" class="cursor-pointer">{{ __('Delete') }}</flux:button>
+        </flux:modal.trigger>
+        @else
+        <flux:modal.trigger name="new-form-modal">
+            <flux:button size="sm" icon="plus" class="shadow-sm cursor-pointer">{{ __('New') }}</flux:button>
+        </flux:modal.trigger>
+        <flux:modal.trigger name="attach-form-modal">
+            <flux:button size="sm" icon="link" class="shadow-sm cursor-pointer">{{ __('Attach') }}</flux:button>
+        </flux:modal.trigger>
+        @endif
+        <flux:button :href="route('generathor.<%= relatedContext %>.index')" size="sm" icon="list-bullet">{{ __('List') }}</flux:button>
+    </div>
+    <flux:navbar>
+        <flux:navbar.item :href="route('generathor.<%= context %>.show', ['record' => $record->getRouteKey()])">{{ __('Details') }}</flux:navbar.item><% tabs.forEach((tab)=> {%>
+        <flux:navbar.item :href="route('generathor.<%= context %>.show<%= tab.attribute %>', ['record' => $record->getRouteKey()])">{{ __('<%= tab.label %>') }}</flux:navbar.item><%})%>    
+    </flux:navbar>
+    <flux:modal name="new-form-modal" flyout>
+        <div class="space-y-4">
+            <flux:heading size="lg">{{ __('New') }} <%= relatedLabel %></flux:heading>
+            <form wire:submit="save" class="space-y-4"><%- include(helpers.template.file('livewire/partials/form'), { inputs: createFormInputs }) %>
+                <div class="flex gap-2">
+                    <flux:spacer />
+                    <flux:modal.close>
+                        <flux:button variant="ghost" class="cursor-pointer">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="cursor-pointer">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+    <flux:modal name="attach-form-modal" flyout>
+        <div class="space-y-4">
+            <flux:heading size="lg">{{ __('Attach') }} <%= relatedLabel %></flux:heading>
+            <form wire:submit="attach" class="space-y-4"><%- include(helpers.template.file('livewire/partials/form'), { inputs: attachFormInputs, form: 'attachForm' }) %>
+                <div class="flex gap-2">
+                    <flux:spacer />
+                    <flux:modal.close>
+                        <flux:button variant="ghost" class="cursor-pointer">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="cursor-pointer">{{ __('Attach') }}</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+    <flux:modal name="detach-confirmation-modal">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Are you sure?') }}</flux:heading>
+                <flux:text class="mt-2">{{ __('Are you sure you want to detach this record?') }}</flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost" class="cursor-pointer" wire:loading.attr="disabled">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button variant="danger" icon="link-slash" class="cursor-pointer" wire:click="detach()" wire:loading.attr="disabled" x-on:click="$flux.modal('detach-confirmation-modal').close()">{{ __('Detach') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+    <flux:modal name="delete-confirmation-modal">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Are you sure?') }}</flux:heading>
+                <flux:text class="mt-2">{{ __('You will not be able to revert this!') }}</flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost" class="cursor-pointer" wire:loading.attr="disabled">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button variant="danger" icon="trash" class="cursor-pointer" wire:click="delete()" wire:loading.attr="disabled" x-on:click="$flux.modal('delete-confirmation-modal').close()">{{ __('Delete') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+    <flux:table>
+        <flux:table.rows>
+            @if($this->related)<% columns.forEach((column)=> {
+if (column.type === 'boolean') { 
+    if (column.nullable) { %>
+            <flux:table.row>
+                <flux:table.cell class="font-semibold">{{ __('<%= column.label %>') }}</flux:table.cell>
+                <flux:table.cell class="font-medium">
+                    <div class="flex items-center gap-2">
+                        @if(!isset($this->related-><%= column.name %>))
+                        <span class="text-red-300">{{__('Not defined')}}</span>
+                        @elseif($this->related-><%= column.name %>)
+                        <flux:icon.check-circle />
+                        <span class="text-sm font-medium">{{ __('Yes') }}</span>
+                        @else
+                        <flux:icon.x-circle />
+                        <span class="text-sm font-medium">{{ __('No') }}</span>
+                        @endif
+                    </div>
+                </flux:table.cell>
+            </flux:table.row><%
+    } else { %>
+            <flux:table.row>
+                <flux:table.cell class="font-semibold">{{ __('<%= column.label %>') }}</flux:table.cell>
+                <flux:table.cell class="font-medium">
+                    <div class="flex items-center gap-2">
+                        @if($this->related-><%= column.name %>)
+                        <flux:icon.check-circle />
+                        <span class="text-sm font-medium">{{ __('Yes') }}</span>
+                        @else
+                        <flux:icon.x-circle />
+                        <span class="text-sm font-medium">{{ __('No') }}</span>
+                        @endif
+                    </div>
+                </flux:table.cell>
+            </flux:table.row><%  
+    }
+} else if (column.type === 'record') { 
+    if (column.nullable) { %>
+            <flux:table.row>
+                <flux:table.cell class="font-semibold">{{ __('<%= column.label %>') }}</flux:table.cell>
+                <flux:table.cell class="font-medium">
+                    @if(isset($this->related-><%= column.name %>))
+                    <flux:link :href="route('generathor.<%= column.context %>.show', ['record' => $this->related-><%= column.relationAttribute %>->getRouteKey()])">{{ $this->related-><%= column.relationAttribute %>->getRouteKey() }} - {{ $this->related-><%= column.relationAttribute %>->getRecordLabel() }}</flux:link>
+                    @else
+                    <span class="text-red-300">{{__('Not defined')}}</span>
+                    @endif
+                </flux:table.cell>
+            </flux:table.row><%
+    } else { %>
+            <flux:table.row>
+                <flux:table.cell class="font-semibold">{{ __('<%= column.label %>') }}</flux:table.cell>
+                <flux:table.cell class="font-medium">
+                    <flux:link :href="route('generathor.<%= column.context %>.show', ['record' => $this->related-><%= column.relationAttribute %>->getRouteKey()])">{{ $this->related-><%= column.relationAttribute %>->getRouteKey() }} - {{ $this->related-><%= column.relationAttribute %>->getRecordLabel() }}</flux:link>
+                </flux:table.cell>
+            </flux:table.row><%
+    } 
+} else {
+    if (column.nullable) { %>
+            <flux:table.row>
+                <flux:table.cell class="font-semibold">{{ __('<%= column.label %>') }}</flux:table.cell>
+                <flux:table.cell class="font-medium">
+                    @if(isset($this->related-><%= column.name %>))
+                    {{ $this->related-><%= column.name %> }}
+                    @else
+                    <span class="text-red-300">{{__('Not defined')}}</span>
+                    @endif
+                </flux:table.cell>
+            </flux:table.row><%  
+    } else { %>
+            <flux:table.row>
+                <flux:table.cell class="font-semibold">{{ __('<%= column.label %>') }}</flux:table.cell>
+                <flux:table.cell class="font-medium">{{ $this->related-><%= column.name %> }}</flux:table.cell>
+            </flux:table.row><%
+    } 
+}
+}); %>
+            @else
+            <flux:table.row>
+                <flux:table.cell class="text-center">{{ __('There is no record') }}</flux:table.cell>
+            </flux:table.row>
+            @endif
+        </flux:table.rows>
+    </flux:table>
+</div>

@@ -1,46 +1,76 @@
 {
-  "name": "generathor-laravel",
-  "version": "1.0.5",
-  "description": "Use this to create Eloquent models and CRUDs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/generathor-js/generathor-laravel.git"
-  },
-  "scripts": {
-    "build": "tsc",
-    "format": "prettier --write 'src/**/*.{ts,tsx}'",
-    "lint": "eslint",
-    "generathor": "generathor",
-    "lint:fix": "eslint --fix",
-    "prepare": "husky"
-  },
-  "files": [
-    "dist/**/*",
-    "templates/**/*"
-  ],
-  "author": "Diego Michelena",
-  "license": "MIT",
-  "devDependencies": {
-    "@eslint/js": "^9.12.0",
-    "@types/args": "^5.0.3",
-    "@types/node": "^22.7.6",
-    "@types/pluralize": "^0.0.33",
-    "eslint": "^9.12.0",
-    "husky": "^9.1.6",
-    "prettier": "^3.3.3",
-    "typescript": "^4.6.4",
-    "typescript-eslint": "^8.9.0"
-  },
-  "dependencies": {
-    "pluralize": "^8.0.0"
-  },
-  "peerDependencies": {
-    "generathor-db": "^1.0.2",
-    "generathor": "^1.0.12"
-  },
-  "optionalDependencies": {
-    "mysql2": "^3.11.3"
-  }
+	"name": "generathor-laravel",
+	"version": "2.0.0",
+	"description": "Use this to create Eloquent models and CRUDs",
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/generathor-js/generathor-laravel.git"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"author": "Diego Michelena",
+	"license": "MIT",
+	"files": [
+		"dist/**/*",
+		"templates/**/*"
+	],
+	"scripts": {
+		"build": "bunup",
+		"dev": "bunup --watch",
+		"lint": "biome check . && eslint src/",
+		"lint:fix": "biome check --write . && eslint src/ --fix",
+		"generathor": "generathor",
+		"format": "biome format --write .",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"prepublishOnly": "bun run lint && bun run typecheck && bun run build",
+		"release": "bun run build && npm publish",
+		"prepare": "husky"
+	},
+	"keywords": [],
+	"publishConfig": {
+		"access": "public"
+	},
+	"engines": {
+		"node": ">=20.19.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.10",
+		"@types/node": "22",
+		"@types/pg": "^8.11.0",
+		"@types/pluralize": "^0.0.33",
+		"@vitest/coverage-v8": "^4.1.2",
+		"bunup": "^0.16.31",
+		"eslint": "^10.1.0",
+		"husky": "^9.1.7",
+		"jiti": "^2.6.1",
+		"lint-staged": "^16.4.0",
+		"typescript-eslint": "^8.58.0",
+		"vitest": "^4.1.2"
+	},
+	"dependencies": {
+		"pluralize": "^8.0.0"
+	},
+	"peerDependencies": {
+		"generathor": "^2.0.1",
+		"generathor-db": "^2.0.0"
+	},
+	"optionalDependencies": {
+		"mysql2": "^3.20.0",
+		"pg": "^8.13.0"
+	},
+	"lint-staged": {
+		"src/**/*.ts": [
+			"biome check --write --no-errors-on-unmatched",
+			"eslint --fix"
+		]
+	}
 }

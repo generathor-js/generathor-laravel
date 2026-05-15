@@ -1,0 +1,7 @@
+@props(['name'])
+<div x-data="{ open: false }"
+     x-on:disclosure-toggle.window="if ($event.detail.name === '{{ $name }}') open = ! open"
+     x-on:click="$dispatch('disclosure-toggle', { name: '{{ $name }}' })" 
+     {{ $attributes->merge(['class' => 'cursor-pointer inline-block']) }}>
+    {{ $slot }}
+</div>

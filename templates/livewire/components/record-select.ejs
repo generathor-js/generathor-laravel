@@ -1,0 +1,121 @@
+@props(['label', 'name' => '', 'model' => '', 'value' => '', 'context'])
+
+<div x-data="{
+    open: false,
+    search: '',
+    value: @js($value),
+    label: '',
+    results: [],
+    loading: false,
+    _internalValueChange: false,
+    init() {
+        if (this.value) {
+            this.fetchById();
+        }
+        $watch('value', (value) => {
+            if (value && !this._internalValueChange) {
+                this.fetchById();
+            }
+            this._internalValueChange = false;
+        });
+    },
+    async fetchById() {
+        try {
+            const response = await fetch(`{{ route('generathor.search', ['context' => $context]) }}?id=${this.value}`);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                this.label = data[0].label;
+                this.search = this.label;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    },
+    async fetchResults() {
+        if (this.search === '') {
+            this.results = [];
+            if (!this.label) {
+                this._internalValueChange = true;
+                this.value = '';
+            }
+            return;
+        }
+        
+        if (this.label && this.search === this.label) return;
+        
+        this.loading = true;
+        try {
+            const response = await fetch(`{{ route('generathor.search', ['context' => $context]) }}?q=${encodeURIComponent(this.search)}`);
+            this.results = await response.json();
+            this.open = this.results.length > 0;
+        } catch (e) {
+            console.error(e);
+        } finally {
+            this.loading = false;
+        }
+    },
+    select(record) {
+        this._internalValueChange = true;
+        this.value = record.id;
+        this.label = record.label;
+        this.search = record.label;
+        this.results = [];
+        this.open = false;
+    },
+    clear() {
+        this._internalValueChange = true;
+        this.value = '';
+        this.label = '';
+        this.search = '';
+        this.results = [];
+        this.open = false;
+        this.$nextTick(() => this.$refs.inputField.focus());
+    }
+}" x-modelable="value" {{ $attributes->whereStartsWith('wire:model') }} class="relative w-full">
+    @php
+        $fieldName = $attributes->whereStartsWith('wire:model')->first() ?? $name;
+    @endphp
+    <flux:field>
+        @if($label)
+            <flux:label>{{ $label }}</flux:label>
+        @endif
+        <div class="relative" 
+             x-data="{ inputPadding: '40px' }"
+             x-effect="if(value) { $nextTick(() => { inputPadding = ($refs.badge ? $refs.badge.offsetWidth + 24 : 100) + 'px' }) } else { inputPadding = '40px' }">
+            <flux:input 
+                x-ref="inputField"
+                x-model="search"
+                @input.debounce.300ms="fetchResults()"
+                @keydown.escape="open = false"
+                @keydown.enter.prevent="if(results.length === 1) select(results[0])"
+                autocomplete="off"
+                x-bind:style="value ? `padding-left: ${inputPadding} !important;` : ''"
+            >
+                <x-slot:iconLeading>
+                    <span x-ref="badge" x-show="value" :title="value" class="bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 px-1.5 py-0.5 rounded text-[10px] font-bold truncate max-w-[80px] inline-block align-middle" x-text="value"></span>
+                    <flux:icon x-show="!value" icon="magnifying-glass" variant="micro" class="text-zinc-400" />
+                </x-slot:iconLeading>
+                <x-slot:iconTrailing>
+                    <flux:icon x-show="loading" x-cloak icon="loading" variant="micro" class="animate-spin text-zinc-400" />
+                    <flux:button x-show="value" x-cloak size="sm" variant="subtle" icon="x-mark" class="-mr-1" @click.stop="clear()" />
+                </x-slot:iconTrailing>
+            </flux:input>
+            <div x-show="open" 
+                    x-on:click.away="open = false"
+                    class="absolute z-50 w-full mt-1 bg-white border border-zinc-200 rounded-xl shadow-xl dark:bg-zinc-900 dark:border-zinc-800 max-h-64 overflow-auto py-1.5"
+                    x-cloak>
+                <template x-for="record in results" :key="record.id">
+                    <div @click="select(record)" 
+                            class="px-3 py-2 mx-1 rounded-lg cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-3">
+                        <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded text-[10px] font-bold" x-text="record.id"></span>
+                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100" x-text="record.label"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+        @if ($fieldName)
+        <flux:error :name="$fieldName" />
+        @endif
+        <input type="hidden" name="{{ $name }}" x-model="value">
+    </flux:field>
+</div>

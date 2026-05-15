@@ -1,0 +1,30 @@
+<?php
+namespace App\Livewire\Generathor\Components;
+
+use Livewire\Component;
+
+abstract class ViewComponent extends Component
+{
+    use WithMessages;
+    use WithErrorHandler;
+
+    public function rendering($view)
+    {
+        $view->title($this->titleComponent());
+    }
+
+    protected function deleteRecord($record)
+    {
+        try {
+            $record->delete();
+            $this->withSuccessMessage(__('Record deleted successfully'));
+            $this->redirectRoute($this->routeName(), navigate: true);
+        } catch (\Exception $e) {
+            $this->handleError($e);
+        }
+    }
+
+    abstract protected function routeName(): string;
+
+    abstract protected function titleComponent(): string;
+}

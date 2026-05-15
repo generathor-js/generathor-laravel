@@ -1,0 +1,25 @@
+<?php
+namespace App\Livewire\Generathor\Components;
+
+use Flux\Flux;
+
+trait WithMessages
+{
+    protected function withSuccessMessage($message)
+    {
+        Flux::toast(
+            variant: 'success',
+            heading: __('Success!'),
+            text: $message,
+        );
+    }
+
+    protected function withErrorMessage($message)
+    {
+        Flux::toast(
+            variant: 'danger',
+            heading: __('Whoops!'),
+            text: $message,
+        );
+    }
+}

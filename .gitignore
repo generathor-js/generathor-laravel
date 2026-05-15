@@ -7,9 +7,10 @@ node_modules
 #Compiled files
 dist
 
-#Dummy
-test.js
+#Test files
+coverage
+generathor.config.*
+output
 
-.DS_Store
-
-generathor.config.js
+#Others
+.npmrc

@@ -1,0 +1,53 @@
+<?php
+use Illuminate\Support\Facades\Route;
+
+Route::livewire('/', 'pages::generathor.menu')->name('generathor.menu');
+<% locals.forEach(function(item) { 
+    const table = item.definition.table;
+    const context = item.helpers.naming.context(table);
+    const listLabel = item.helpers.naming.listLabel(table);
+%>
+/**
+ * <%= listLabel %> routes.
+ */
+Route::livewire('<%= context %>', 'pages::generathor.<%= context %>.index')->name('generathor.<%= context %>.index');
+Route::livewire('<%= context %>/{record}', 'pages::generathor.<%= context %>.show')->name('generathor.<%= context %>.show');
+Route::livewire('<%= context %>/{record}/edit', 'pages::generathor.<%= context %>.edit')->name('generathor.<%= context %>.edit');<% item.definition.relations.forEach(function(relation) { 
+    const relationContext = item.helpers.naming.relationContext(relation, item.definition.table);
+    const relationName = item.helpers.naming.capitalizedRelationAttribute(relation, item.definition.table);
+%>
+Route::livewire('<%= context %>/{record}/<%= relationContext %>', 'pages::generathor.<%= context %>.<%= relationContext %>')->name('generathor.<%= context %>.show<%= relationName %>');<% }); %>
+<% });%>
+
+Route::get('search/{context}', function ($context) {
+    $modelClass = 'App\\Models\\' . str($context)->studly();
+
+    if (!class_exists($modelClass) || !method_exists($modelClass, 'search')) {
+        return [];
+    }
+
+    $id = request('id');
+    $id = is_string($id) && !empty($id) ? $id : null;
+
+    if ($id) {
+        $item = $modelClass::find($id);
+
+        return $item ? [
+            [
+                'id' => $item->id,
+                'label' => $item->getRecordLabel()
+            ]
+        ] : [];
+    }
+
+    $query = request('q');
+    $query = is_string($query) && !empty($query) ? $query : '';
+
+    return $modelClass::search($query)
+        ->limit(10)
+        ->get()
+        ->map(fn($item) => [
+            'id' => $item->id,
+            'label' => $item->getRecordLabel(),
+        ]);
+})->name('generathor.search');

@@ -1,0 +1,59 @@
+<?php
+<%
+const homeRoute = configuration.homeRoute();
+const table = definition.table;
+const modelClass = helpers.naming.modelClass(table);
+const modelLabel = helpers.naming.listLabel(table);
+const context = helpers.naming.context(table);
+const fks = helpers.item.foreignKeysMap(definition);
+const inputs = [];
+const rules = {};
+definition.columns.forEach((column) => {
+    helpers.column.inputsByColumn(column, fks)
+        .forEach((input) => inputs.push(input));
+    const columnRules = helpers.column.rules(column);
+    if (columnRules.length) {
+        rules[column.name] = columnRules.join('|');
+    }
+});
+%>
+use App\Models\<%= modelClass %>;
+use App\Livewire\Generathor\Components\EditFormComponent;
+use App\Livewire\Generathor\Forms\<%= modelClass %>Form;
+
+new class extends EditFormComponent
+{
+    public <%= modelClass %> $record;
+
+    public <%= modelClass %>Form $form;
+
+    protected function titleComponent(): string
+    {
+       return $this->record->getRecordLabel();
+    }
+
+    protected function routeName(): string
+    {
+        return 'generathor.<%= context %>.show';
+    }
+} ?>
+<div>
+    <flux:heading size="xl">{{ __('<%= modelLabel %>') }}</flux:heading>
+    <flux:breadcrumbs>
+        <flux:breadcrumbs.item :href="route('<%= homeRoute %>')">{{ __('Home') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item :href="route('generathor.menu')">{{ __('Manage') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item :href="route('generathor.<%= context %>.index')">{{ __('<%= modelLabel %>') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item :href="route('generathor.<%= context %>.show', ['record' => $record->getRouteKey()])">{{ $record->getRecordLabel() }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>{{ __('Edit') }}</flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <div class="flex justify-end gap-1 mb-1 mt-4">
+        <flux:button :href="$this->redirectUrl" size="sm" icon="arrow-uturn-left">{{ __('Return') }}</flux:button>
+    </div>
+    <form wire:submit="save" class="space-y-4"><%- include(helpers.template.file('livewire/partials/form'), { inputs, tabs: 2 }) %>
+        <div class="flex gap-2">
+            <flux:spacer />
+            <flux:button :href="$this->redirectUrl" variant="ghost" class="cursor-pointer">{{ __('Cancel') }}</flux:button>
+            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="cursor-pointer">{{ __('Save') }}</flux:button>
+        </div>
+    </form>
+</div>

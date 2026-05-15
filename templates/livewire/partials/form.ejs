@@ -1,0 +1,27 @@
+<% 
+const tabs = locals.tabs || 4;
+const form = locals.form || 'form';
+const method = locals.method || 'post';
+const spaces = ' '.repeat(tabs * 4);
+inputs.forEach((input)=> { 
+if (input.type === 'number') {%>
+<%= spaces %><flux:input :label="__('<%= input.label %>')" mask:dynamic="$money($input, '.', '', <%= input.data.decimals %>)" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live.blur="<%= form %>.<%= input.name %>"<% } %> /><% 
+} else if (input.type === 'select') { %>
+<%= spaces %><flux:select :label="__('<%= input.label %>')" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live="<%= form %>.<%= input.name %>" <% } %>><% input.data.options.forEach((option)=> { %>
+<%= spaces %>    <flux:select.option value="<%= option.value %>"<% if (method === 'get') {%> :selected="($<%= form %>['<%= input.name %>'] ?? '') === '<%= option.value %>'"<% } %>>{{ __('<%= option.label %>') }}</flux:select.option><%
+}) %>
+<%= spaces %></flux:select><%
+} else if (input.type === 'record') { %>
+<%= spaces %><x-generathor.record-select :label="__('<%= input.label %>')" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live="<%= form %>.<%= input.name %>"<% } %> context="<%= input.data.context %>" /><%
+} else if (input.type === 'datetime') { %>
+<%= spaces %><flux:input type="datetime-local" :label="__('<%= input.label %>')" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live.blur="<%= form %>.<%= input.name %>"<% } %> /><%
+} else if (input.type === 'date') { %>
+<%= spaces %><flux:input type="date" :label="__('<%= input.label %>')" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live.blur="<%= form %>.<%= input.name %>"<% } %> /><%
+} else if (input.type === 'time') { %>
+<%= spaces %><flux:input type="time" :label="__('<%= input.label %>')" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live.blur="<%= form %>.<%= input.name %>"<% } %> /><%
+} else if (input.type === 'checkbox') { %>
+<%= spaces %><flux:checkbox :label="__('<%= input.label %>')" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live="<%= form %>.<%= input.name %>"<% } %> /><%
+} else { %>
+<%= spaces %><flux:input :label="__('<%= input.label %>')" <% if (method === 'get') {%>name="<%= form %>[<%= input.name %>]" :value="$<%= form %>['<%= input.name %>'] ?? ''"<% } else { %>wire:model.live.blur="<%= form %>.<%= input.name %>"<% } %> /><%
+} 
+}) %>

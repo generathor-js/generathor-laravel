@@ -1,4 +1,3 @@
-export * from './generator';
-export * from './configuration';
-export * from './laravel11';
-export * from './laravel12';
+export * from './configuration.js';
+export * from './generator.js';
+export * from './laravel13.js';

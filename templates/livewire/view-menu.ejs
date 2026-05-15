@@ -1,0 +1,23 @@
+<?php
+
+use Livewire\Component;
+
+new class extends Component {}
+?>
+<%
+const homeRoute = locals[0].configuration.homeRoute();
+%>
+<div>
+    <flux:heading size="xl">{{ __('Manage') }}</flux:heading>
+    <flux:breadcrumbs class="mb-4">
+        <flux:breadcrumbs.item :href="route('<%= homeRoute %>')">{{ __('Home') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>{{ __('Manage') }}</flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"><% locals.forEach(function(item) { 
+        const table = item.definition.table;
+        const context = item.helpers.naming.context(table);
+        const listLabel = item.helpers.naming.listLabel(table);
+    %>
+        <flux:button :href="route('generathor.<%= context %>.index')" size="sm" class="w-full">{{ __('<%= listLabel %>') }}</flux:button><% }); %>
+    </div>
+</div>

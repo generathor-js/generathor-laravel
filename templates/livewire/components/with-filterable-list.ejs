@@ -1,0 +1,42 @@
+<?php
+namespace App\Livewire\Generathor\Components;
+
+trait WithFilterableList
+{
+    public $filters = [];
+    public $filterQuantity = 0;
+    public $sort = null;
+    public $direction = null;
+
+    public function sortBy($field)
+    {
+        if ($this->sort === $field) {
+            $this->direction = $this->direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sort = $field;
+            $this->direction = 'asc';
+        }
+    }
+
+    protected function bootFilters() {
+        $this->filters = collect(is_array($this->filters) ? $this->filters : [])
+            ->only($this->availableFilters())
+            ->filter(fn($value) => $value !== null)
+            ->all();
+        $this->filterQuantity = count($this->filters);
+    }
+
+    protected function queryString()
+    {
+        return [
+            'sort',
+            'direction',
+            'filters'
+        ];
+    }
+
+    protected function availableFilters()
+    {
+        return [];
+    }
+}
