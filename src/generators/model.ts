@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { GeneratorForCollection, GeneratorForItem, type Item } from 'generathor';
 import type { Item as DBItem } from 'generathor-db';
 import naming from '../helpers/naming.js';
@@ -22,18 +23,38 @@ export class ModelGeneratorProvider extends BaseGeneratorProvider {
 			directory: this.directory('/app/Models'),
 			overwriteFiles: this.overwriteFiles(),
 			fileName: (item: Item) => `${naming.modelClass((item as LaravelItem).definition.table)}.php`,
-			prepareItems: (items: Array<Item>) => this.prepareItems(items as Array<DBItem>),
+			prepareItems: (items: Array<Item>) => {
+				if (this.configuration.createLaravelUserModel()) {
+					items = items.filter((item) => (item as DBItem).table !== 'users');
+				}
+
+				return this.prepareItems(items as Array<DBItem>);
+			},
 		});
 
+		const laravelUserModelFile = this.directory('/app/Models/LaravelUser.php');
 		if (this.configuration.createLaravelUserModel()) {
-			templates[this.templateKey('user-model')] = new GeneratorForCollection({
+			templates[this.templateKey('child-model-user')] = new GeneratorForItem({
+				template: this.templateFile('eloquent/child'),
+				source: this.configuration.source(),
+				directory: this.directory('/app/Models'),
+				overwriteFiles: !existsSync(laravelUserModelFile),
+				fileName: (item: Item) =>
+					`${naming.modelClass((item as LaravelItem).definition.table)}.php`,
+				prepareItems: (items: Array<Item>) =>
+					this.prepareItems(
+						items.filter((item: Item) => (item as DBItem).table === 'users') as Array<DBItem>,
+					),
+			});
+
+			templates[this.templateKey('laravel-user-model')] = new GeneratorForCollection({
 				template: this.templateFile(
 					`eloquent/user-${this.configuration.laravelVersion().toString()}`,
 				),
 				source: this.configuration.source(),
 				overwriteFiles: this.overwriteFiles(),
 				prepareItems: () => [],
-				file: this.directory('/app/Models/LaravelUser.php'),
+				file: laravelUserModelFile,
 			});
 		}
 
