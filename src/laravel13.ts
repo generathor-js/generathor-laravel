@@ -10,9 +10,12 @@ function generators(configuration: ConfigurationAttributes): Generators {
 
 export function eloquent(configuration?: ConfigurationAttributes): Generators {
 	configuration = configuration || {};
-	configuration.onlyEloquentModels = true;
-	configuration.createLaravelUserModel = true;
-	configuration.laravelVersion = 13;
+	configuration.onlyEloquentModels =
+		'onlyEloquentModels' in configuration ? configuration.onlyEloquentModels : true;
+	configuration.createLaravelUserModel =
+		'createLaravelUserModel' in configuration ? configuration.createLaravelUserModel : true;
+	configuration.laravelVersion =
+		'laravelVersion' in configuration ? configuration.laravelVersion : 13;
 	configuration.eloquent = configuration.eloquent || {};
 
 	return generators(configuration);
@@ -20,9 +23,12 @@ export function eloquent(configuration?: ConfigurationAttributes): Generators {
 
 export function livewire(configuration?: ConfigurationAttributes): Generators {
 	configuration = configuration || {};
-	configuration.onlyEloquentModels = false;
-	configuration.createLaravelUserModel = true;
-	configuration.laravelVersion = 13;
+	configuration.onlyEloquentModels =
+		'onlyEloquentModels' in configuration ? configuration.onlyEloquentModels : false;
+	configuration.createLaravelUserModel =
+		'createLaravelUserModel' in configuration ? configuration.createLaravelUserModel : true;
+	configuration.laravelVersion =
+		'laravelVersion' in configuration ? configuration.laravelVersion : 13;
 	configuration.eloquent = configuration.eloquent || {};
 
 	return generators(configuration);

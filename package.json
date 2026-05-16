@@ -1,6 +1,6 @@
 {
 	"name": "generathor-laravel",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Use this to create Eloquent models and CRUDs",
 	"type": "module",
 	"repository": {
