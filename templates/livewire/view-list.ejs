@@ -137,7 +137,7 @@ new class extends ListComponent
     </flux:modal>
     <flux:table :paginate="$this->items" pagination:scroll-to>
         <flux:table.columns><% columns.forEach((column)=> { %>
-            <flux:table.column sortable :sorted="$sort === '<%= column.name %>'" :direction="$direction" wire:click="sortBy('<%= column.name %>')"><%= column.label %></flux:table.column><% }) %>
+            <flux:table.column sortable :sorted="$sort === '<%= column.name %>'" :direction="$direction" wire:click="sortBy('<%= column.name %>')">{{ __('<%= column.label %>') }}</flux:table.column><% }) %>
             <flux:table.column>{{ __('Actions') }}</flux:table.column>
         </flux:table.columns>
         <flux:table.rows>
